@@ -118,29 +118,35 @@ hide_streamlit_style = """
             #MainMenu {visibility: hidden;}
             footer {visibility: hidden;}
             header {visibility: hidden;}
-            /* Target the specific container with important flag and fixed position override */
-            ._container_1upux_1 {
-                display: none !important;
-                position: absolute !important;
-                visibility: hidden !important;
-                opacity: 0 !important;
-                height: 0 !important;
-                pointer-events: none !important;
-            }
-            
-            /* Alternative approach using fixed position targeting */
-            div[style*="position: fixed"][style*="bottom: 0"] {
-                display: none !important;
-            }
-            
-            /* Additional attempt using more specific selectors */
-            div[class*="_container_"][style*="position: fixed"],
-            div[class*="_container_1upux_"] {
-                display: none !important;
-            }
-            </style>
             """
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+remove_footer = """
+<style>
+._container_1upux_1 { display: none !important; }
+</style>
+
+<script>
+// Function to remove the footer
+function removeFooter() {
+    const elements = document.getElementsByClassName('_container_1upux_1');
+    while(elements.length > 0){
+        elements[0].parentNode.removeChild(elements[0]);
+    }
+    
+    // Also try to find by fixed position
+    const fixedElements = document.querySelectorAll('div[style*="position: fixed"][style*="bottom: 0"]');
+    fixedElements.forEach(el => el.parentNode.removeChild(el));
+}
+
+// Run immediately and also after a slight delay to ensure it catches elements
+// that might be added dynamically
+removeFooter();
+setTimeout(removeFooter, 1000);
+// Keep checking periodically
+setInterval(removeFooter, 2000);
+</script>
+"""
+
+st.markdown(remove_footer, unsafe_allow_html=True)
 
 st.title("DXF to WKT Wizard")
 
