@@ -114,30 +114,14 @@ def process_uploaded_file(uploaded_file):
 
 
 # More aggressive CSS to hide footer and buttons
-hide_elements = """
-<style>
-    /* Hide the header, footer, and fullscreen button */
-    header {visibility: hidden;}
-    footer {visibility: hidden;}
-    
-    /* Target fullscreen button and other controls */
-    .ViewFullScreenIcon_container__MnU_k, 
-    div[data-testid="stDecoration"], 
-    section[data-testid="stSidebar"],
-    button[title="View fullscreen"],
-    [data-testid="stToolbar"] {
-        display: none !important;
-    }
-    
-    /* Ensure the iframe fills the available space without extra margins */
-    .main .block-container {
-        padding-top: 0;
-        padding-bottom: 0;
-        max-width: 100%;
-    }
-</style>
-"""
-st.markdown(hide_elements, unsafe_allow_html=True)
+hide_streamlit_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            </style>
+            """
+
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 st.title("DXF to WKT Wizard")
 
