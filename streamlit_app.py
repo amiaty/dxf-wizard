@@ -114,14 +114,16 @@ def process_uploaded_file(uploaded_file):
 
 
 # More aggressive CSS to hide footer and buttons
-hide_streamlit_style = """
+hide_st_style = """
             <style>
             #MainMenu {visibility: hidden;}
             footer {visibility: hidden;}
+            header {visibility: hidden;}
+            div.embeddedAppMetaInfoBar_container__DxxL1 {visibility: hidden;}
             </style>
             """
 
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+st.markdown(hide_st_style, unsafe_allow_html=True)
 
 st.title("DXF to WKT Wizard")
 
