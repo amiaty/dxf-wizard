@@ -146,7 +146,7 @@ setInterval(removeFooter, 2000);
 </script>
 """
 
-st.markdown(remove_footer, unsafe_allow_html=True)
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 st.title("DXF to WKT Wizard")
 
