@@ -120,6 +120,8 @@ hide_st_style = """
             footer {visibility: hidden;}
             header {visibility: hidden;}
             div.embeddedAppMetaInfoBar_container__DxxL1 {visibility: hidden;}
+            ._container_1upux_1 {display: none !important;}
+            [class*="_container_1upux_"] {display: none !important;}
             </style>
             """
 
