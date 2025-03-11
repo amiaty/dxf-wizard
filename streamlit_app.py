@@ -112,37 +112,34 @@ def process_uploaded_file(uploaded_file):
         st.error(f"Error processing DXF file: {str(e)}")
         return False
 
+
 hide_streamlit_style = """
             <style>
             #MainMenu {visibility: hidden;}
             footer {visibility: hidden;}
             header {visibility: hidden;}
-            /* Target the specific container */
+            /* Target the specific container with important flag and fixed position override */
+            ._container_1upux_1 {
+                display: none !important;
+                position: absolute !important;
+                visibility: hidden !important;
+                opacity: 0 !important;
+                height: 0 !important;
+                pointer-events: none !important;
+            }
+            
+            /* Alternative approach using fixed position targeting */
+            div[style*="position: fixed"][style*="bottom: 0"] {
+                display: none !important;
+            }
+            
+            /* Additional attempt using more specific selectors */
+            div[class*="_container_"][style*="position: fixed"],
             div[class*="_container_1upux_"] {
                 display: none !important;
-                visibility: hidden !important;
-            }
-            
-            /* Target text content as a fallback */
-            div:has(> div:contains("Built with Streamlit")) {
-                display: none !important;
-                visibility: hidden !important;
-            }
-            
-            /* Target the specific hostedName class */
-            ._hostedName_1upux_12, div[class*="_hostedName_"] {
-                display: none !important;
-                visibility: hidden !important;
-            }
-            
-            /* Target the fullscreen link */
-            a[class*="_linkOutText_"], div:has(> a:contains("Fullscreen")) {
-                display: none !important;
-                visibility: hidden !important;
             }
             </style>
             """
-
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 st.title("DXF to WKT Wizard")
