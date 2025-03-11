@@ -112,20 +112,38 @@ def process_uploaded_file(uploaded_file):
         st.error(f"Error processing DXF file: {str(e)}")
         return False
 
-
-# More aggressive CSS to hide footer and buttons
-hide_st_style = """
+hide_streamlit_style = """
             <style>
             #MainMenu {visibility: hidden;}
             footer {visibility: hidden;}
             header {visibility: hidden;}
-            div.embeddedAppMetaInfoBar_container__DxxL1 {visibility: hidden;}
-            ._container_1upux_1 {display: none !important;}
-            [class*="_container_1upux_"] {display: none !important;}
+            /* Target the specific container */
+            div[class*="_container_1upux_"] {
+                display: none !important;
+                visibility: hidden !important;
+            }
+            
+            /* Target text content as a fallback */
+            div:has(> div:contains("Built with Streamlit")) {
+                display: none !important;
+                visibility: hidden !important;
+            }
+            
+            /* Target the specific hostedName class */
+            ._hostedName_1upux_12, div[class*="_hostedName_"] {
+                display: none !important;
+                visibility: hidden !important;
+            }
+            
+            /* Target the fullscreen link */
+            a[class*="_linkOutText_"], div:has(> a:contains("Fullscreen")) {
+                display: none !important;
+                visibility: hidden !important;
+            }
             </style>
             """
 
-st.markdown(hide_st_style, unsafe_allow_html=True)
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 st.title("DXF to WKT Wizard")
 
