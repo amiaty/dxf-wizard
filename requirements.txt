@@ -3,3 +3,4 @@ matplotlib>=3.10.0
 ezdxf>=1.4.0
 pandas>=2.2.0
 shapely>=2.0.0
+httpx[http2]>=0.28.1
