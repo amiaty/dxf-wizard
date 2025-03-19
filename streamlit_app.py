@@ -337,7 +337,7 @@ hide_streamlit_style = """
             """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
-st.title("DXF to WKT Converter")
+st.title("DXF Wizard")
 
 uploaded_file = st.file_uploader("Choose a DXF file", type=['dxf'])
 
