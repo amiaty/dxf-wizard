@@ -383,11 +383,11 @@ if doc is not None:
                 for _, row in entity_data.iterrows():
                     triples.append(f"(<{row['uri']}> \"{row['wkt']}\"^^geo:wktLiteral <http://wistor.nl/entityType#{selected_object_type}>)")
                 triples_text = "\n".join(triples)
-                if col2.button("Save to GraphDB"):
+                if col2.button("Import"):
                     wistor = Wistor("Demo", "Demo", "Demo")
                     rule_result = wistor.execute_rule('ams_add_many_wkt',{"triples":triples_text}, debug_mode=True)
                     if rule_result['success']:
-                        st.success("Entities added to GraphDB successfully!")
+                        st.success(f"{len(triples)} {selected_object_type} successfully added to the database!")
                     else:
                         st.error(f"Error adding entities to GraphDB: {rule_result['errors']}")
         else:
