@@ -8,7 +8,6 @@ from ezdxf.addons.drawing.config import Configuration, TextPolicy
 import shapely.geometry as sg
 import pandas as pd
 import math
-import uuid
 from pywistor import Wistor
 from utils import generate_uri
 

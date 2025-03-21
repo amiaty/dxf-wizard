@@ -1,0 +1,7 @@
+[ui]
+layout = "wide"
+[theme]
+base="dark"
+primaryColor="#407bff"
+backgroundColor="#10101a"
+secondaryBackgroundColor="#373848"
