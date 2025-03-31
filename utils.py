@@ -3,6 +3,7 @@ import math
 from typing import List
 import ezdxf
 import shapely.geometry as sg
+from pyproj import Transformer
 
 def generate_uri(entity_data, base_uri = "http://wistor.nl/entities/"):
     """Generate a deterministic URI for a WKT entity"""
@@ -63,8 +64,18 @@ def get_non_empty_layer_names(doc: ezdxf.document.Drawing) -> List[str]:
     return non_empty_layer_names
 
 def dxf_entity_to_wkt(entity):
-    """Convert a DXF entity to WKT format with metadata"""
+    """Convert a DXF entity to WKT format with metadata and transform coordinates"""
+
+    # Create transformer from EPSG:28992 (Amersfoort/RD New) to EPSG:4326 (WGS84)
+    transformer = Transformer.from_crs("EPSG:28992", "EPSG:4326", always_xy=True)
+    
+    # Helper function to transform coordinates
+    def transform_point(x, y):
+        lon, lat = transformer.transform(x, y)
+        return lon, lat
+    
     entity_type = entity.dxftype()
+
     result = {
         'layer': entity.dxf.layer,
         'type': entity_type,
@@ -72,21 +83,23 @@ def dxf_entity_to_wkt(entity):
         'wkt': None,
         'extra_data': {}
     }
-    
+
     # LINE - Simple straight line
     if entity_type == 'LINE':
-        line = sg.LineString([(entity.dxf.start.x, entity.dxf.start.y), 
-                              (entity.dxf.end.x, entity.dxf.end.y)])
+        start_x, start_y = transform_point(entity.dxf.start.x, entity.dxf.start.y)
+        end_x, end_y = transform_point(entity.dxf.end.x, entity.dxf.end.y)
+        
+        line = sg.LineString([(start_x, start_y), (end_x, end_y)])
         result['wkt'] = line.wkt
         result['extra_data'] = {
-            'start_point': f"{entity.dxf.start.x},{entity.dxf.start.y}",
-            'end_point': f"{entity.dxf.end.x},{entity.dxf.end.y}"
+            'start_point': f"{start_x},{start_y}",
+            'end_point': f"{end_x},{end_y}"
         }
-        
+    
     # LWPOLYLINE - Lightweight polyline
     elif entity_type == 'LWPOLYLINE':
         points = entity.get_points()
-        coords = [(p[0], p[1]) for p in points]
+        coords = [transform_point(p[0], p[1]) for p in points]
         
         if entity.closed and len(coords) > 2:
             # Closed polyline becomes a polygon
@@ -102,10 +115,10 @@ def dxf_entity_to_wkt(entity):
             'is_closed': entity.closed,
             'point_count': len(points)
         }
-    
+
     # POLYLINE - Old-style polyline
     elif entity_type == 'POLYLINE':
-        vertices = [(v.dxf.location.x, v.dxf.location.y) for v in entity.vertices]
+        vertices = [transform_point(v.dxf.location.x, v.dxf.location.y) for v in entity.vertices]
         
         if entity.is_closed and len(vertices) > 2:
             if vertices[0] != vertices[-1]:
@@ -120,7 +133,7 @@ def dxf_entity_to_wkt(entity):
             'is_closed': entity.is_closed,
             'point_count': len(vertices)
         }
-            
+        
     # CIRCLE - Perfect circle
     elif entity_type == 'CIRCLE':
         center = entity.dxf.center
@@ -132,18 +145,21 @@ def dxf_entity_to_wkt(entity):
             angle = math.radians(i * 10)
             x = center.x + radius * math.cos(angle)
             y = center.y + radius * math.sin(angle)
-            points.append((x, y))
+            lon, lat = transform_point(x, y)
+            points.append((lon, lat))
         
         # Close the polygon
         points.append(points[0])
         
         polygon = sg.Polygon(points)
         result['wkt'] = polygon.wkt
-        result['extra_data'] = {
-            'center': f"{center.x},{center.y}",
-            'radius': radius
-        }
         
+        center_lon, center_lat = transform_point(center.x, center.y)
+        result['extra_data'] = {
+            'center': f"{center_lon},{center_lat}",
+            'radius': radius  # Note: radius is not transformed as it would be distorted
+        }
+    
     # ARC - Circular arc
     elif entity_type == 'ARC':
         center = entity.dxf.center
@@ -165,17 +181,20 @@ def dxf_entity_to_wkt(entity):
             angle = math.radians(start_angle + (angle_span * i / num_segments))
             x = center.x + radius * math.cos(angle)
             y = center.y + radius * math.sin(angle)
-            points.append((x, y))
+            lon, lat = transform_point(x, y)
+            points.append((lon, lat))
         
         linestring = sg.LineString(points)
         result['wkt'] = linestring.wkt
+        
+        center_lon, center_lat = transform_point(center.x, center.y)
         result['extra_data'] = {
-            'center': f"{center.x},{center.y}",
+            'center': f"{center_lon},{center_lat}",
             'radius': radius,
             'start_angle': start_angle,
             'end_angle': end_angle
         }
-        
+    
     # ELLIPSE
     elif entity_type == 'ELLIPSE':
         center = entity.dxf.center
@@ -204,58 +223,65 @@ def dxf_entity_to_wkt(entity):
             x_rot = center.x + x * math.cos(rotation) - y * math.sin(rotation)
             y_rot = center.y + x * math.sin(rotation) + y * math.cos(rotation)
             
-            points.append((x_rot, y_rot))
+            lon, lat = transform_point(x_rot, y_rot)
+            points.append((lon, lat))
         
         # Close the polygon
         points.append(points[0])
         
         polygon = sg.Polygon(points)
         result['wkt'] = polygon.wkt
+        
+        center_lon, center_lat = transform_point(center.x, center.y)
         result['extra_data'] = {
-            'center': f"{center.x},{center.y}",
+            'center': f"{center_lon},{center_lat}",
             'major_axis': a,
             'minor_axis': b,
             'rotation': math.degrees(rotation)
         }
-        
+    
     # POINT
     elif entity_type == 'POINT':
-        point = sg.Point(entity.dxf.location.x, entity.dxf.location.y)
+        lon, lat = transform_point(entity.dxf.location.x, entity.dxf.location.y)
+        point = sg.Point(lon, lat)
         result['wkt'] = point.wkt
         result['extra_data'] = {
-            'location': f"{entity.dxf.location.x},{entity.dxf.location.y}"
+            'location': f"{lon},{lat}"
         }
-        
+    
     # SPLINE
     elif entity_type == 'SPLINE':
         # Get a polyline approximation of the spline
         points = [(p.x, p.y) for p in entity.approximate()]
-        linestring = sg.LineString(points)
+        transformed_points = [transform_point(x, y) for x, y in points]
+        linestring = sg.LineString(transformed_points)
         result['wkt'] = linestring.wkt
         result['extra_data'] = {
             'degree': entity.dxf.degree,
             'control_point_count': len(entity.control_points)
         }
-        
+    
     # TEXT, MTEXT - Text entities
     elif entity_type in ('TEXT', 'MTEXT'):
         # For text, we'll just use the insertion point
         if entity_type == 'TEXT':
-            point = sg.Point(entity.dxf.insert.x, entity.dxf.insert.y)
+            lon, lat = transform_point(entity.dxf.insert.x, entity.dxf.insert.y)
             text_content = entity.dxf.text
         else:  # MTEXT
-            point = sg.Point(entity.dxf.insert.x, entity.dxf.insert.y)
+            lon, lat = transform_point(entity.dxf.insert.x, entity.dxf.insert.y)
             text_content = entity.text
             
+        point = sg.Point(lon, lat)
         result['wkt'] = point.wkt
         result['extra_data'] = {
-            'location': f"{entity.dxf.insert.x},{entity.dxf.insert.y}",
+            'location': f"{lon},{lat}",
             'text': text_content
         }
-        
+    
     # 3DFACE, SOLID, TRACE - Filled areas
     elif entity_type in ('3DFACE', 'SOLID', 'TRACE'):
-        points = [(v.x, v.y) for v in entity.vertices()]
+        vertices = entity.vertices()
+        points = [transform_point(v.x, v.y) for v in vertices]
         
         # Ensure the polygon is closed
         if points[0] != points[-1]:
@@ -264,16 +290,16 @@ def dxf_entity_to_wkt(entity):
         polygon = sg.Polygon(points)
         result['wkt'] = polygon.wkt
         result['extra_data'] = {
-            'vertex_count': len(entity.vertices())
+            'vertex_count': len(vertices)
         }
-        
+    
     # HATCH - Filled area defined by boundaries
     elif entity_type == 'HATCH':
         # Get all external paths
         paths = []
         for path in entity.paths:
             if hasattr(path, 'vertices'):
-                vertices = [(v.x, v.y) for v in path.vertices]
+                vertices = [transform_point(v.x, v.y) for v in path.vertices]
                 if vertices:
                     paths.append(vertices)
         
@@ -297,5 +323,5 @@ def dxf_entity_to_wkt(entity):
             'pattern': entity.dxf.pattern_name,
             'path_count': len(paths)
         }
-    
+
     return result

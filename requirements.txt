@@ -4,3 +4,4 @@ ezdxf>=1.4.0
 pandas>=2.2.0
 shapely>=2.0.0
 httpx[http2]>=0.28.1
+pyproj>=3.7.0
