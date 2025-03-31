@@ -148,7 +148,7 @@ if doc is not None:
                     wistor = Wistor("AMS", "Gemeente Amersfoort", "oA^a&W4TvxK^zl", cgi="https://amersfoort-bms-poc.wistor.nl/servlets/cgi/")
                     rule_result = wistor.execute_rule('ams_add_many_wkt',{"triples":triples_text}, debug_mode=True)
                     if rule_result['success']:
-                        st.success(f"{len(triples)} {selected_object_type} successfully added to the database!")
+                        st.success(f"Info: {len(triples)} {selected_object_type} successfully added to the database!")
                     else:
                         st.error(f"Error adding entities to GraphDB: {rule_result['errors']}")
         else:
